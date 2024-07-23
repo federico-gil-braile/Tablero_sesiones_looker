@@ -1,0 +1,1 @@
+"fact_sessions_funnel_vertical_agg" y "fact_sessions_funnel_tribe_agg" tienen el mismo input "`peya-bi-tools-pro.il_sessions.perseus_fact_sessions_funnel_by_verticals`"

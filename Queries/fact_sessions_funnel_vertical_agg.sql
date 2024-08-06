@@ -10,7 +10,7 @@ WITH raw AS (
         ,   platform
         ,   app_browser
         ,   app_version
-        ,   city_id
+        ,   area_id
         ,   Tribe
         ,   businessType   
         ,   shop_list
@@ -47,7 +47,7 @@ WITH raw AS (
             ,   f.platform
             ,   s.app_version
             ,   f.app_browser
-            ,   f.city.city_id 
+            ,   s.area_id
             ,   f.Tribe
             ,   f.businessType     
             ,   f.shop_list_dummy         as shop_list
@@ -62,10 +62,11 @@ WITH raw AS (
             ,   MAX(f.country) as country          
         FROM `peya-bi-tools-pro.il_sessions.perseus_fact_sessions_funnel_by_verticals` f
         LEFT JOIN (
-                    SELECT  session_id
-                            ,MAX(app_version) app_version
-                    FROM `peya-bi-tools-pro.il_sessions.fact_perseus_sessions` 
-                    WHERE partition_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -22 DAY)--partition_date >= DATE_ADD('{{ next_ds }}', INTERVAL -2 DAY)
+                    SELECT  s.session_id
+                            ,MAX(s.app_version) app_version
+                            ,MAX(s.area.area_id) area_id
+                    FROM `peya-bi-tools-pro.il_sessions.fact_perseus_sessions` s
+                    WHERE s.partition_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -22 DAY)--partition_date >= DATE_ADD('{{ next_ds }}', INTERVAL -2 DAY)
                     GROUP BY 1
                     )s ON f.session_id = s.session_id
         WHERE partition_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -22 DAY)--partition_date >= DATE_ADD('{{ next_ds }}', INTERVAL -2 DAY)
@@ -79,7 +80,7 @@ SELECT
     ,   country 
     ,   visit_type
     ,   app_browser
-    ,   city_id
+    ,   area_id
     ,   businessType
     ,   COUNT(DISTINCT session_concat) as sessions
     ,   COUNT(DISTINCT 

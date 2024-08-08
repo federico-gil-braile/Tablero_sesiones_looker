@@ -1,6 +1,3 @@
---INSERT `peya-food-and-groceries.automated_tables_reports.fact_sessions_funnel_vertical_agg` NO USAR, ESTA ES LA QAT ORIGINAL
-
-
 WITH raw AS (
     SELECT
             date
@@ -104,7 +101,6 @@ SELECT
     ,   user_segment_lifecycle
     ,   user_segment_behaviour
     ,   user_segment_qc
-    ,   businessType
     ,   COUNT(DISTINCT session_concat) as sessions
     ,   COUNT(DISTINCT 
             (CASE WHEN GREATEST(shop_list

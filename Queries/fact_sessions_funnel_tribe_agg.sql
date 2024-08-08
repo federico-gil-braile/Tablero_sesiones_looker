@@ -8,11 +8,15 @@ WITH raw AS (
         ,   session_id
         ,   global_entity_id
         ,   platform
-        ,   app_browser
         ,   app_version
+        ,   area_id
+        ,   city_id
+        ,   user_segment_income
+        ,   user_segment_lifecycle
+        ,   user_segment_behaviour
+        ,   user_segment_qc
         ,   Tribe
         ,   businessType
-        ,   area_id
         ,   shop_list
         ,   shop_details
         ,   product_clicked
@@ -45,9 +49,13 @@ WITH raw AS (
             ,   f.session_id
             ,   CAST(f.global_entity_id as STRING) as global_entity_id
             ,   f.platform
-            ,   f.app_browser
             ,   s.app_version
             ,   s.area_id
+            ,   f.city.city_id
+            ,   u.user_segment_income
+            ,   u.user_segment_lifecycle
+            ,   u.user_segment_behaviour
+            ,   u.user_segment_qc
             ,   f.Tribe
             ,   f.businessType       
             ,   f.shop_list_dummy         as shop_list
@@ -66,21 +74,36 @@ WITH raw AS (
                             ,MAX(s.app_version) app_version
                             ,MAX(s.area.area_id) area_id
                     FROM `peya-bi-tools-pro.il_sessions.fact_perseus_sessions` s
-                    WHERE s.partition_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -22 DAY)--partition_date >= DATE_ADD('{{ next_ds }}', INTERVAL -2 DAY)
+                    WHERE s.partition_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -4 DAY)--partition_date >= DATE_ADD('{{ next_ds }}', INTERVAL -2 DAY)
                     GROUP BY 1
                     )s ON f.session_id = s.session_id
-        WHERE partition_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -22 DAY)--partition_date >= DATE_ADD('{{ next_ds }}', INTERVAL -2 DAY)
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18
+        LEFT JOIN (
+                    SELECT user_id
+                        ,user_segment_income
+                        ,user_segment_lifecycle
+                        ,user_segment_behaviour
+                        ,user_segment_qc
+                        ,from_date
+                        ,CASE WHEN to_date IS NULL THEN CURRENT_DATE() ELSE to_date END AS to_date
+                    FROM `peya-bi-tools-pro.il_core.dim_user_segmentation` 
+                    --WHERE to_date IS NULL --Ultima segmentacion del usuario
+                    ) u ON SAFE_CAST(f.user_id AS INT64) = u.user_id
+                        AND f.partition_date BETWEEN u.from_date AND u.to_date
+        WHERE partition_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -4 DAY)--partition_date >= DATE_ADD('{{ next_ds }}', INTERVAL -2 DAY)
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22
     )
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24
 )
 SELECT 
         date
     ,   platform
-    ,   country 
-    ,   visit_type
-    ,   app_browser
+    ,   app_version
     ,   area_id
+    ,   city_id
+    ,   user_segment_income
+    ,   user_segment_lifecycle
+    ,   user_segment_behaviour
+    ,   user_segment_qc
     ,   Tribe
     ,   COUNT(DISTINCT session_concat) as sessions
     ,   COUNT(DISTINCT 
@@ -107,4 +130,4 @@ SELECT
     ,   COUNT(DISTINCT transaction_mCVR4)      as transaction_mCVR4
     ,   COUNT(DISTINCT checkout_loaded_mCVR3b) as checkout_loaded_mCVR3c
 FROM raw 
-GROUP BY 1,2,3,4,5,6,7
+GROUP BY 1,2,3,4,5,6,7,8,9,10

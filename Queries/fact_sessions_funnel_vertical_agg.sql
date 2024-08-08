@@ -15,6 +15,7 @@ WITH raw AS (
         ,   user_segment_lifecycle
         ,   user_segment_behaviour
         ,   user_segment_qc
+        ,   is_plus
         ,   Tribe
         ,   businessType
         ,   shop_list
@@ -56,6 +57,7 @@ WITH raw AS (
             ,   u.user_segment_lifecycle
             ,   u.user_segment_behaviour
             ,   u.user_segment_qc
+            ,   du.is_plus
             ,   f.Tribe
             ,   f.businessType       
             ,   f.shop_list_dummy         as shop_list
@@ -89,10 +91,11 @@ WITH raw AS (
                     --WHERE to_date IS NULL --Ultima segmentacion del usuario
                     ) u ON SAFE_CAST(f.user_id AS INT64) = u.user_id
                         AND f.partition_date BETWEEN u.from_date AND u.to_date
+        LEFT JOIN `peya-bi-tools-pro.il_core.dim_user` du ON f.user_id = CAST(du.user_id AS STRING)
         WHERE partition_date >= DATE_ADD(CURRENT_DATE(), INTERVAL -4 DAY)--partition_date >= DATE_ADD('{{ next_ds }}', INTERVAL -2 DAY)
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23
     )
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
 )
 SELECT 
         date
@@ -104,6 +107,7 @@ SELECT
     ,   user_segment_lifecycle
     ,   user_segment_behaviour
     ,   user_segment_qc
+    ,   is_plus
     ,   businessType
     ,   COUNT(DISTINCT session_concat) as sessions
     ,   COUNT(DISTINCT 
@@ -130,4 +134,4 @@ SELECT
     ,   COUNT(DISTINCT transaction_mCVR4)      as transaction_mCVR4
     ,   COUNT(DISTINCT checkout_loaded_mCVR3b) as checkout_loaded_mCVR3c
 FROM raw 
-GROUP BY 1,2,3,4,5,6,7,8,9,10
+GROUP BY 1,2,3,4,5,6,7,8,9,10,11
